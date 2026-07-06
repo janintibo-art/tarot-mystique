@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tarot Mystique</title>
+<style>
+  :root {
+    --nuit: #100C22;
+    --panneau: #1D1640;
+    --panneau-2: #251C52;
+    --or: #C9A227;
+    --or-clair: #E8CA6C;
+    --ivoire: #EFE7D3;
+    --ivoire-2: #B9AF97;
+    --amethyste: #7A66D9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    background: var(--nuit);
+    color: var(--ivoire);
+    font-family: Georgia, 'Times New Roman', serif;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 120% 60% at 50% -10%, #241A4E 0%, transparent 60%),
+      radial-gradient(ellipse 100% 50% at 50% 110%, #1A1238 0%, transparent 55%),
+      var(--nuit);
+  }
+
+  /* ------- ciel étoilé ------- */
+  #stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; border-radius: 50%;
+    background: var(--or-clair);
+    animation: twinkle 4s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%,100% { opacity:.15 } 50% { opacity:.7 } }
+
+  .screen {
+    position: fixed; inset: 0; z-index: 1;
+    display: none; flex-direction: column; align-items: center;
+    overflow-y: auto; overflow-x: hidden;
+    padding: max(24px, env(safe-area-inset-top)) 16px 32px;
+  }
+  .screen.on { display: flex; }
+
+  /* ------- typographie ------- */
+  .surtitre {
+    font-family: system-ui, sans-serif;
+    font-size: 11px; letter-spacing: .35em; text-transform: uppercase;
+    color: var(--or); text-indent: .35em;
+  }
+  h1 {
+    font-size: clamp(34px, 9vw, 46px);
+    font-weight: 400; letter-spacing: .12em; text-transform: uppercase;
+    text-align: center; line-height: 1.15;
+    color: var(--ivoire);
+    text-shadow: 0 0 30px rgba(201,162,39,.25);
+  }
+  .filet {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--or); margin: 14px 0;
+  }
+  .filet::before, .filet::after {
+    content: ''; width: 54px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--or));
+  }
+  .filet::after { background: linear-gradient(90deg, var(--or), transparent); }
+  .filet span { font-size: 14px; }
+
+  /* ------- accueil ------- */
+  #accueil { justify-content: center; gap: 6px; }
+  #accueil .sceau {
+    width: 120px; height: 160px; border-radius: 10px;
+    background-image: url('cards/back.webp');
+    background-size: cover;
+    border: 1px solid rgba(201,162,39,.5);
+    box-shadow: 0 12px 40px rgba(0,0,0,.6), 0 0 50px rgba(122,102,217,.18);
+    margin-bottom: 26px;
+    animation: flotte 5s ease-in-out infinite;
+  }
+  @keyframes flotte { 0%,100% { transform: translateY(0) rotate(-2deg) } 50% { transform: translateY(-10px) rotate(2deg) } }
+
+  .menu { display: flex; flex-direction: column; gap: 14px; margin-top: 30px; width: min(320px, 86vw); }
+  .btn-tirage {
+    background: linear-gradient(160deg, var(--panneau-2), var(--panneau));
+    border: 1px solid rgba(201,162,39,.45);
+    border-radius: 12px;
+    padding: 16px 20px;
+    color: var(--ivoire);
+    text-align: left;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .btn-tirage:active { transform: scale(.97); }
+  .btn-tirage .nom {
+    font-size: 19px; letter-spacing: .04em;
+    color: var(--or-clair);
+  }
+  .btn-tirage .detail {
+    font-family: system-ui, sans-serif;
+    font-size: 12.5px; color: var(--ivoire-2); margin-top: 5px; line-height: 1.45;
+  }
+
+  /* ------- écran de tirage ------- */
+  #tirage { justify-content: flex-start; }
+  .entete {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .consigne {
+    font-style: italic; color: var(--ivoire-2);
+    font-size: 15px; text-align: center; max-width: 300px; line-height: 1.5;
+    min-height: 44px;
+    transition: opacity .4s;
+  }
+
+  /* table de tirage : emplacements */
+  .table-tirage {
+    display: flex; gap: 12px; justify-content: center; align-items: flex-start;
+    margin: 10px 0 6px; flex-wrap: nowrap;
+  }
+  .slot { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .slot .etiquette {
+    font-family: system-ui, sans-serif;
+    font-size: 10px; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--or); text-indent: .25em;
+  }
+  .porte-carte {
+    width: var(--cw); height: calc(var(--cw) * 4 / 3);
+    border-radius: 10px;
+    border: 1px dashed rgba(201,162,39,.35);
+    position: relative;
+    perspective: 900px;
+  }
+  .porte-carte.pleine { border-color: transparent; }
+
+  .carte3d {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+    transition: transform .7s cubic-bezier(.4,.1,.2,1);
+    cursor: pointer;
+  }
+  .carte3d.retournee { transform: rotateY(180deg); }
+  .face {
+    position: absolute; inset: 0; border-radius: 10px;
+    backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    background-size: cover; background-position: center;
+    box-shadow: 0 10px 26px rgba(0,0,0,.55);
+    border: 1px solid rgba(201,162,39,.4);
+  }
+  .face.dos { background-image: url('cards/back.webp'); }
+  .face.avant { transform: rotateY(180deg); }
+  .face.avant.renversee { transform: rotateY(180deg) rotate(180deg); }
+  .carte3d.retournee .face.avant { box-shadow: 0 10px 30px rgba(0,0,0,.6), 0 0 34px rgba(201,162,39,.28); }
+
+  /* ------- éventail ------- */
+  #zone-eventail {
+    position: relative;
+    width: 100%; max-width: 420px;
+    height: 220px;
+    margin-top: auto;
+    flex-shrink: 0;
+  }
+  .carte-eventail {
+    position: absolute; left: 50%; bottom: -40px;
+    width: 84px; height: 112px;
+    border-radius: 8px;
+    background-image: url('cards/back.webp');
+    background-size: cover;
+    border: 1px solid rgba(201,162,39,.5);
+    box-shadow: -4px 6px 16px rgba(0,0,0,.55);
+    transform-origin: 50% 130%;
+    transition: transform .3s ease, opacity .3s ease;
+    cursor: pointer;
+  }
+  .carte-eventail.choisie {
+    opacity: 0;
+    transform: translate(-50%, -160px) scale(.6) !important;
+    pointer-events: none;
+  }
+
+  /* ------- interprétations ------- */
+  #lecture-zone { width: min(430px, 100%); margin-top: 18px; display: none; flex-direction: column; gap: 12px; }
+  #lecture-zone.on { display: flex; animation: monte .6s ease both; }
+  @keyframes monte { from { opacity: 0; transform: translateY(16px) } to { opacity: 1; transform: none } }
+  .fiche {
+    background: linear-gradient(170deg, var(--panneau-2), var(--panneau));
+    border: 1px solid rgba(201,162,39,.35);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .fiche .position {
+    font-family: system-ui, sans-serif;
+    font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+    color: var(--amethyste); text-indent: .28em;
+  }
+  .fiche .titre {
+    display: flex; align-items: baseline; gap: 10px; margin-top: 4px;
+  }
+  .fiche .titre .nom { font-size: 20px; color: var(--or-clair); letter-spacing: .03em; }
+  .fiche .titre .numero { font-family: system-ui, sans-serif; font-size: 11px; color: var(--ivoire-2); letter-spacing: .15em; }
+  .badge-renverse {
+    display: inline-block; margin-top: 6px;
+    font-family: system-ui, sans-serif; font-size: 10px;
+    letter-spacing: .2em; text-transform: uppercase; text-indent: .2em;
+    color: var(--nuit); background: var(--or);
+    border-radius: 3px; padding: 3px 8px;
+  }
+  .fiche .mots {
+    font-style: italic; color: var(--or); font-size: 14px; margin-top: 8px;
+  }
+  .fiche .sens {
+    font-family: system-ui, sans-serif;
+    font-size: 14px; line-height: 1.6; color: var(--ivoire); margin-top: 8px;
+  }
+
+  .actions { display: flex; gap: 12px; margin-top: 20px; padding-bottom: 10px; }
+  .btn {
+    font-family: system-ui, sans-serif;
+    font-size: 12px; letter-spacing: .2em; text-transform: uppercase; text-indent: .2em;
+    padding: 12px 22px; border-radius: 30px; cursor: pointer;
+    transition: transform .15s;
+  }
+  .btn:active { transform: scale(.95); }
+  .btn.plein { background: var(--or); color: var(--nuit); border: none; }
+  .btn.contour { background: transparent; color: var(--or); border: 1px solid rgba(201,162,39,.6); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01s !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<!-- ================= ACCUEIL ================= -->
+<div id="accueil" class="screen on">
+  <div class="sceau"></div>
+  <div class="surtitre">Arcanes majeurs</div>
+  <h1>Tarot<br>Mystique</h1>
+  <div class="filet"><span>&#10022;</span></div>
+  <div class="menu">
+    <button class="btn-tirage" onclick="commencer(1)">
+      <div class="nom">Carte du jour</div>
+      <div class="detail">Une seule carte pour éclairer l'énergie qui t'accompagne aujourd'hui.</div>
+    </button>
+    <button class="btn-tirage" onclick="commencer(3)">
+      <div class="nom">Passé &middot; Présent &middot; Futur</div>
+      <div class="detail">Trois cartes pour lire le fil de ta question à travers le temps.</div>
+    </button>
+  </div>
+</div>
+
+<!-- ================= TIRAGE ================= -->
+<div id="tirage" class="screen">
+  <div class="entete">
+    <div class="surtitre" id="titre-tirage">Carte du jour</div>
+    <div class="consigne" id="consigne">Concentre-toi sur ta question…</div>
+  </div>
+
+  <div class="table-tirage" id="slots"></div>
+
+  <div id="lecture-zone"></div>
+
+  <div class="actions" id="actions" style="display:none">
+    <button class="btn contour" onclick="allerAccueil()">Accueil</button>
+    <button class="btn plein" id="btn-rejouer">Nouveau tirage</button>
+  </div>
+
+  <div id="zone-eventail"></div>
+</div>
+
+<script>
+/* ---------------- données des arcanes ---------------- */
+const ARCANES = [
+  { fichier:'bateleur',    nom:'Le Bateleur',       numero:'Arcane I',
+    mots:'Commencement · Potentiel · Habileté',
+    endroit:"Un nouveau départ s'offre à toi. Tu as en main tous les outils nécessaires : c'est le moment d'oser, de créer, de te lancer avec confiance.",
+    renverse:"L'énergie est là mais dispersée. Méfie-toi de l'hésitation, des promesses en l'air ou d'une certaine ruse autour de toi. Recentre-toi avant d'agir." },
+  { fichier:'papesse',     nom:'La Papesse',        numero:'Arcane II',
+    mots:'Intuition · Mystère · Savoir caché',
+    endroit:"La réponse est déjà en toi. Écoute ton intuition, observe en silence : ce qui est voilé aujourd'hui se dévoilera au moment juste.",
+    renverse:"Un secret pèse ou une intuition est ignorée. Ne refoule pas ta petite voix intérieure : elle cherche à te protéger." },
+  { fichier:'justice',     nom:'La Justice',        numero:'Arcane VIII',
+    mots:'Équilibre · Vérité · Décision',
+    endroit:"L'heure est à la clarté et à l'équité. Une décision juste se prépare : pèse chaque chose honnêtement, et la balance penchera en ta faveur.",
+    renverse:"Un jugement biaisé ou un déséquilibre demande réparation. Regarde la situation en face, sans te mentir ni accuser autrui." },
+  { fichier:'hermite',     nom:"L'Hermite",         numero:'Arcane IX',
+    mots:'Introspection · Sagesse · Recherche',
+    endroit:"Prends du recul. La lanterne de l'Hermite éclaire un chemin intérieur : la solitude choisie t'apportera une réponse mûrie et profonde.",
+    renverse:"Attention au repli excessif ou à l'isolement subi. La réflexion est précieuse, mais il est peut-être temps de rouvrir ta porte." },
+  { fichier:'roue',        nom:'La Roue de Fortune', numero:'Arcane X',
+    mots:'Changement · Cycles · Destin',
+    endroit:"La roue tourne en ta faveur : un cycle s'achève, un autre commence. Accueille le mouvement, la chance accompagne ceux qui savent saisir l'instant.",
+    renverse:"Tu résistes à un changement inévitable, ou la roue semble bloquée. Patience : ce creux n'est qu'une phase, prépare le rebond." },
+  { fichier:'temperance',  nom:'Tempérance',        numero:'Arcane XIV',
+    mots:'Harmonie · Patience · Guérison',
+    endroit:"Tout se rééquilibre en douceur. La modération, le dialogue et la patience guérissent ce qui était tendu : laisse le temps faire son œuvre.",
+    renverse:"Un excès ou une impatience trouble l'harmonie. Cherche le juste milieu avant que la coupe ne déborde." },
+  { fichier:'maison_dieu', nom:'La Maison Dieu',    numero:'Arcane XVI',
+    mots:'Bouleversement · Révélation · Libération',
+    endroit:"Une structure fragile s'effondre pour laisser place au vrai. Ce choc est une libération : ce qui tombe devait tomber, reconstruis plus solide.",
+    renverse:"Tu retiens un changement par peur de tout perdre. La secousse sera moins rude que redouté — et parfois elle est même évitée de justesse." },
+  { fichier:'etoile',      nom:"L'Étoile",          numero:'Arcane XVII',
+    mots:'Espoir · Inspiration · Renouveau',
+    endroit:"Après l'orage, le ciel se dégage. L'Étoile verse sur toi confiance et inspiration : tes vœux trouvent un terrain fertile, avance avec foi.",
+    renverse:"Le découragement voile ton étoile. Elle brille pourtant toujours : ravive doucement l'espoir, un petit pas à la fois." },
+  { fichier:'lune',        nom:'La Lune',           numero:'Arcane XVIII',
+    mots:'Rêves · Intuition · Illusions',
+    endroit:"Le monde des rêves et de l'inconscient te parle. Tout n'est pas ce qu'il semble : avance prudemment, mais fais confiance à ton ressenti profond.",
+    renverse:"Le brouillard se dissipe : des peurs irrationnelles ou une illusion perdent leur emprise. La vérité émerge peu à peu." },
+  { fichier:'soleil',      nom:'Le Soleil',         numero:'Arcane XIX',
+    mots:'Réussite · Joie · Vitalité',
+    endroit:"Rayonnement, succès et clarté : le Soleil illumine ta route. C'est un grand oui de l'univers — savoure, partage, brille.",
+    renverse:"Le succès est là mais retardé, ou terni par un excès d'orgueil. Reste simple et chaleureux : la lumière reviendra pleine." },
+];
+
+const POSITIONS_3 = ['Passé', 'Présent', 'Futur'];
+const PROBA_RENVERSEE = 0.28;
+
+let mode = 1;          // 1 ou 3 cartes
+let paquet = [];       // indices mélangés
+let choisies = [];     // { arcane, renversee }
+let phase = 'accueil'; // accueil | choix | lecture
+
+/* ---------------- ciel étoilé ---------------- */
+(function ciel() {
+  const zone = document.getElementById('stars');
+  for (let i = 0; i < 60; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const t = 1 + Math.random() * 1.6;
+    s.style.width = s.style.height = t + 'px';
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 100 + '%';
+    s.style.animationDelay = (Math.random() * 4) + 's';
+    zone.appendChild(s);
+  }
+})();
+
+/* ---------------- navigation ---------------- */
+function montrer(id) {
+  document.querySelectorAll('.screen').forEach(e => e.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function allerAccueil() {
+  phase = 'accueil';
+  montrer('accueil');
+}
+
+/* Bouton retour Android */
+window.appBack = function () {
+  if (phase === 'accueil') return 'exit';
+  allerAccueil();
+  return 'ok';
+};
+
+/* ---------------- tirage ---------------- */
+function melanger(t) {
+  for (let i = t.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [t[i], t[j]] = [t[j], t[i]];
+  }
+  return t;
+}
+
+function commencer(n) {
+  mode = n;
+  phase = 'choix';
+  choisies = [];
+  paquet = melanger([...Array(ARCANES.length).keys()]);
+
+  document.getElementById('titre-tirage').textContent =
+    n === 1 ? 'Carte du jour' : 'Passé · Présent · Futur';
+  document.getElementById('consigne').textContent =
+    n === 1 ? "Concentre-toi sur ta journée, puis choisis une carte du bout du doigt."
+            : "Pense à ta question, puis choisis trois cartes, une à une.";
+  document.getElementById('lecture-zone').className = '';
+  document.getElementById('lecture-zone').innerHTML = '';
+  document.getElementById('actions').style.display = 'none';
+
+  construireSlots();
+  construireEventail();
+  montrer('tirage');
+}
+
+function construireSlots() {
+  const zone = document.getElementById('slots');
+  zone.innerHTML = '';
+  const cw = mode === 1 ? 'min(46vw, 190px)' : 'min(27vw, 116px)';
+  for (let i = 0; i < mode; i++) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.innerHTML =
+      (mode === 3 ? `<div class="etiquette">${POSITIONS_3[i]}</div>` : '') +
+      `<div class="porte-carte" id="porte-${i}" style="--cw:${cw}"></div>`;
+    zone.appendChild(slot);
+  }
+}
+
+function construireEventail() {
+  const zone = document.getElementById('zone-eventail');
+  zone.innerHTML = '';
+  const n = paquet.length;
+  paquet.forEach((idx, i) => {
+    const c = document.createElement('div');
+    c.className = 'carte-eventail';
+    const angle = -40 + (80 / (n - 1)) * i;
+    c.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+    c.style.zIndex = i;
+    c.onclick = () => choisirCarte(c, idx);
+    zone.appendChild(c);
+  });
+}
+
+function choisirCarte(el, idxArcane) {
+  if (phase !== 'choix' || el.classList.contains('choisie')) return;
+  if (choisies.length >= mode) return;
+
+  el.classList.add('choisie');
+  const renversee = Math.random() < PROBA_RENVERSEE;
+  const num = choisies.length;
+  choisies.push({ arcane: ARCANES[idxArcane], renversee });
+
+  const porte = document.getElementById('porte-' + num);
+  porte.classList.add('pleine');
+  porte.innerHTML = `
+    <div class="carte3d" id="c3d-${num}">
+      <div class="face dos"></div>
+      <div class="face avant ${renversee ? 'renversee' : ''}"
+           style="background-image:url('cards/${ARCANES[idxArcane].fichier}.webp')"></div>
+    </div>`;
+
+  const restantes = mode - choisies.length;
+  document.getElementById('consigne').textContent =
+    restantes > 0
+      ? (restantes === 1 ? 'Encore une carte…' : `Encore ${restantes} cartes…`)
+      : 'Le destin est tiré.';
+
+  if (choisies.length === mode) {
+    phase = 'lecture';
+    setTimeout(reveler, 550);
+  }
+}
+
+function reveler() {
+  document.getElementById('zone-eventail').innerHTML = '';
+  choisies.forEach((c, i) => {
+    setTimeout(() => {
+      document.getElementById('c3d-' + i).classList.add('retournee');
+    }, i * 650);
+  });
+  setTimeout(afficherLecture, choisies.length * 650 + 500);
+}
+
+function afficherLecture() {
+  const zone = document.getElementById('lecture-zone');
+  zone.innerHTML = choisies.map((c, i) => `
+    <div class="fiche">
+      ${mode === 3 ? `<div class="position">${POSITIONS_3[i]}</div>` : ''}
+      <div class="titre">
+        <span class="nom">${c.nom || c.arcane.nom}</span>
+        <span class="numero">${c.arcane.numero}</span>
+      </div>
+      ${c.renversee ? '<span class="badge-renverse">Renversée</span>' : ''}
+      <div class="mots">${c.arcane.mots}</div>
+      <div class="sens">${c.renversee ? c.arcane.renverse : c.arcane.endroit}</div>
+    </div>`).join('');
+  zone.className = 'on';
+
+  const actions = document.getElementById('actions');
+  actions.style.display = 'flex';
+  document.getElementById('btn-rejouer').onclick = () => commencer(mode);
+  document.getElementById('consigne').textContent =
+    'Touche « Nouveau tirage » pour consulter à nouveau les arcanes.';
+}
+</script>
+</body>
+</html>
