@@ -15,6 +15,37 @@ const CONTRATS = [
 ];
 const NOMS_BOTS = ['Irma', 'Basile', 'Colette', 'Marius'];
 
+/* ---------------- Jeux de cartes (motifs) ---------------- */
+const JEUX_CARTES = [
+  { dossier:'jeu1', nom:'Classique' },
+  { dossier:'jeu2', nom:'S\u00e9pia' },
+  { dossier:'jeu3', nom:'Parchemin' },
+  { dossier:'jeu4', nom:'H\u00e9ritage' },
+  { dossier:'jeu5', nom:'Dor\u00e9' },
+  { dossier:'jeu6', nom:'Azur' },
+];
+let jeuChoisi = (function () {
+  try {
+    const d = localStorage.getItem('tarot_jeu_cartes');
+    if (JEUX_CARTES.some(j => j.dossier === d)) return d;
+  } catch(e) {}
+  return 'jeu1';
+})();
+function srcCarte(img) { return 'cartes/' + jeuChoisi + '/' + img + '.webp'; }
+function choisirJeu(dossier) {
+  jeuChoisi = dossier;
+  try { localStorage.setItem('tarot_jeu_cartes', dossier); } catch(e) {}
+  majChoixJeu();
+}
+function majChoixJeu() {
+  const zone = document.getElementById('choix-jeu');
+  if (!zone) return;
+  zone.innerHTML = JEUX_CARTES.map(j =>
+    `<div class="apercu-jeu ${j.dossier===jeuChoisi?'choisi':''}" onclick="choisirJeu('${j.dossier}')">
+      <div class="carte"><img src="cartes/${j.dossier}/coeur_roi.webp" loading="lazy"></div>
+      <div class="nj">${j.nom}</div></div>`).join('');
+}
+
 function creerPaquet() {
   const p = [];
   for (let v = 1; v <= 21; v++)
@@ -168,7 +199,7 @@ function phaseAppelRoi() {
     const rang = rois === 4 ? 13 : 14; // 4 rois en main -> appelle une dame
     zone.innerHTML = COULEURS.map(c => {
       const img = c + '_' + (rang===14?'roi':'dame');
-      return `<div class="carte moy" onclick="choisirRoi('${c}',${rang})"><img src="cartes/${img}.webp"></div>`;
+      return `<div class="carte moy" onclick="choisirRoi('${c}',${rang})"><img src="${srcCarte(img)}"></div>`;
     }).join('');
     voile('v-roi', true);
   } else {
@@ -206,7 +237,7 @@ function phaseChien() {
 
   // Petite / Garde : montrer le chien à tous
   const zone = document.getElementById('chien-cartes');
-  zone.innerHTML = S.chien.map(c => `<div class="carte moy"><img src="cartes/${c.img}.webp"></div>`).join('');
+  zone.innerHTML = S.chien.map(c => `<div class="carte moy"><img src="${srcCarte(c.img)}"></div>`).join('');
   document.getElementById('chien-info').textContent =
     S.joueurs[S.preneur].nom + ' ramasse le chien et doit écarter ' + S.chien.length + ' cartes.';
   document.getElementById('chien-ok').onclick = () => { voile('v-chien', false); ramasserChien(); };
@@ -616,13 +647,13 @@ function majMainHumaine() {
       cls += ecartable(c, j.main, strict) ? ' jouable' : ' inerte';
       if (S.ecartChoix.includes(c)) cls += ' choisie-ecart';
     }
-    return `<div class="${cls}" onclick="clicCarteHumain(${idx})"><img src="cartes/${c.img}.webp"></div>`;
+    return `<div class="${cls}" onclick="clicCarteHumain(${idx})"><img src="${srcCarte(c.img)}"></div>`;
   }).join('');
 }
 
 function majPli() {
   document.getElementById('pli').innerHTML = S.pli.map(p =>
-    `<div class="pose"><div class="carte moy"><img src="cartes/${p.carte.img}.webp"></div>
+    `<div class="pose"><div class="carte moy"><img src="${srcCarte(p.carte.img)}"></div>
      <div class="qui">${S.joueurs[p.j].nom}</div></div>`).join('');
 }
 
@@ -657,3 +688,4 @@ window.appBack = function () {
 };
 
 majMenuScores();
+majChoixJeu();

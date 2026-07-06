@@ -42,6 +42,18 @@
   .btn-mode:active { transform:scale(.97); }
   .btn-mode .t { font-size:18px; color:var(--or-clair); }
   .btn-mode .d { font-family:system-ui,sans-serif; font-size:12px; color:var(--ivoire-2); margin-top:3px; }
+  .choix-jeu-titre { font-family:system-ui,sans-serif; font-size:10px; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--ivoire-2); margin:6px 0 8px; text-indent:.3em; }
+  #choix-jeu { display:flex; gap:12px; overflow-x:auto; max-width:94vw; padding:6px 8px 10px;
+    scrollbar-width:none; margin-bottom:10px; }
+  #choix-jeu::-webkit-scrollbar { display:none; }
+  .apercu-jeu { display:flex; flex-direction:column; align-items:center; gap:5px;
+    cursor:pointer; flex-shrink:0; }
+  .apercu-jeu .carte { height:74px; opacity:.65; transition:opacity .2s, box-shadow .2s, transform .2s; }
+  .apercu-jeu.choisi .carte { opacity:1; outline:2px solid var(--or);
+    box-shadow:0 0 16px rgba(201,162,39,.55); transform:translateY(-3px); }
+  .apercu-jeu .nj { font-family:system-ui,sans-serif; font-size:10.5px; color:var(--ivoire-2); }
+  .apercu-jeu.choisi .nj { color:var(--or-clair); }
   #scores-cumul { font-family:system-ui,sans-serif; font-size:13px; color:var(--ivoire-2);
     margin-top:22px; text-align:center; line-height:1.7; }
   #btn-raz { background:none; border:none; color:var(--or); font-size:11px;
@@ -155,6 +167,8 @@
   <div class="surtitre">Jeu de cartes traditionnel</div>
   <h1>Tarot<br>Français</h1>
   <div class="filet"><span>&#10022;</span></div>
+  <div class="choix-jeu-titre">Jeu de cartes</div>
+  <div id="choix-jeu"></div>
   <div class="menu-btns">
     <button class="btn-mode" onclick="nouvellePartie(3)">
       <div class="t">3 joueurs</div><div class="d">24 cartes chacun · chien de 6</div>

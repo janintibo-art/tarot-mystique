@@ -5,9 +5,11 @@ enchères (Petite, Garde, Garde Sans, Garde Contre), chien et écart,
 appel du roi à 5 joueurs, règles complètes des plis (fournir, couper,
 surcouper, l'Excuse), petit au bout, comptage des bouts et scores cumulés.
 
-Les 21 atouts, l'Excuse et les 16 figures sont découpés des planches
-illustrées d'origine ; les 40 cartes de points sont générées dans le
-même style crème vintage.
+**Six jeux de cartes au choix** (Classique, Sépia, Parchemin, Héritage,
+Doré, Azur) : les 21 atouts, l'Excuse et les 16 figures de chaque jeu
+sont découpés des planches illustrées d'origine ; les 40 cartes de
+points sont générées dans le style et les teintes de chaque planche.
+Le choix se fait sur l'écran d'accueil et il est mémorisé.
 
 ## Compiler l'APK (automatique)
 
